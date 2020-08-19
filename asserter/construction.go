@@ -269,7 +269,7 @@ func SignatureType(
 	signature types.SignatureType,
 ) error {
 	switch signature {
-	case types.Ecdsa, types.EcdsaRecovery, types.Ed25519:
+	case types.Ecdsa, types.EcdsaRecovery, types.Ed25519, types.Schnorr1:
 		return nil
 	default:
 		return fmt.Errorf("%s is not a supported SignatureType", signature)

@@ -18,7 +18,9 @@ package types
 
 // SignatureType SignatureType is the type of a cryptographic signature. * ecdsa: `r (32-bytes) || s
 // (32-bytes)` - `64 bytes` * ecdsa_recovery: `r (32-bytes) || s (32-bytes) || v (1-byte)` - `65
-// bytes` * ed25519: `R (32-byte) || s (32-bytes)` - `64 bytes`
+// bytes` * ed25519: `R (32-byte) || s (32-bytes)` - `64 bytes` * schnorr_1: `r (32-bytes) || s
+// (32-bytes)` - `64 bytes`  (schnorr signature implemented by Zilliqa where both `r` and `s` are
+// scalars encoded as `32-bytes` values, most significant byte first.)
 type SignatureType string
 
 // List of SignatureType
@@ -26,4 +28,5 @@ const (
 	Ecdsa         SignatureType = "ecdsa"
 	EcdsaRecovery SignatureType = "ecdsa_recovery"
 	Ed25519       SignatureType = "ed25519"
+	Schnorr1      SignatureType = "schnorr_1"
 )

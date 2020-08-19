@@ -54,7 +54,7 @@ rm -rf tmp;
 
 # Download spec file from releases
 ROSETTA_SPEC_VERSION=v1.4.2
-curl -L https://github.com/coinbase/rosetta-specifications/releases/download/${ROSETTA_SPEC_VERSION}/api.json -o api.json;
+curl -L https://raw.githubusercontent.com/coinbase/rosetta-specifications/master/api.json -o api.json;
 
 # Generate client + types code
 GENERATOR_VERSION=v4.3.0
@@ -125,6 +125,7 @@ sed "${SED_IFLAG[@]}" 's/EDWARDS25519/Edwards25519/g' client/* server/*;
 sed "${SED_IFLAG[@]}" 's/ECDSA_RECOVERY/EcdsaRecovery/g' client/* server/*;
 sed "${SED_IFLAG[@]}" 's/ECDSA/Ecdsa/g' client/* server/*;
 sed "${SED_IFLAG[@]}" 's/ED25519/Ed25519/g' client/* server/*;
+sed "${SED_IFLAG[@]}" 's/SCHNORR_1/Schnorr1/g' client/* server/*;
 sed "${SED_IFLAG[@]}" 's/CREATED/CoinCreated/g' client/* server/*;
 sed "${SED_IFLAG[@]}" 's/SPENT/CoinSpent/g' client/* server/*;
 

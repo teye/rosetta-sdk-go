@@ -21,6 +21,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	zilSchnorr "github.com/Zilliqa/gozilliqa-sdk/schnorr"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
@@ -67,6 +68,12 @@ func (s *SignerSecp256k1) Sign(
 			return nil, fmt.Errorf("sign: unable to sign. %w", err)
 		}
 		sig = sig[:EcdsaSignatureLen]
+	case types.Schnorr1:
+		pubKeyBytes := s.KeyPair.PublicKey.Bytes
+		sig, err = zilSchnorr.SignMessage(privKeyBytes, pubKeyBytes, payload.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("sign: unable to sign. %w", err)
+		}
 	default:
 		return nil, fmt.Errorf("sign: unsupported signature type. %w", err)
 	}
@@ -98,6 +105,8 @@ func (s *SignerSecp256k1) Verify(signature *types.Signature) error {
 	case types.EcdsaRecovery:
 		normalizedSig := sig[:EcdsaSignatureLen]
 		verify = secp256k1.VerifySignature(pubKey, message, normalizedSig)
+	case types.Schnorr1:
+		verify = zilSchnorr.VerifySignature(pubKey, message, sig)
 	default:
 		return fmt.Errorf("%s is not supported", signature.SignatureType)
 	}

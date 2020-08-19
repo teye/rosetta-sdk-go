@@ -3,6 +3,7 @@ module github.com/coinbase/rosetta-sdk-go
 go 1.13
 
 require (
+	github.com/Zilliqa/gozilliqa-sdk v1.2.1-0.20200812052504-8c647e60d8d3
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/ethereum/go-ethereum v1.9.18
