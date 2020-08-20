@@ -20,6 +20,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	zilUtil "github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -147,4 +148,32 @@ func TestVerifySecp256k1(t *testing.T) {
 	assert.Equal(t, nil, signerSecp256k1.Verify(goodSchnorr1Signature))
 	assert.Equal(t, nil, signerSecp256k1.Verify(goodEcdsaSignature))
 	assert.Equal(t, nil, signerSecp256k1.Verify(goodEcdsaRecoverySignature))
+}
+
+func TestDemo(t *testing.T) {
+	var signer2 Signer
+	keypair2 := &KeyPair{
+		PublicKey: &types.PublicKey{
+			Bytes:     zilUtil.DecodeHex("public_key"),
+			CurveType: "secp256k1",
+		},
+		PrivateKey: zilUtil.DecodeHex("private_key"),
+	}
+	payloadSchnorr1 := &types.SigningPayload{
+		Address:       "sender_address",
+		Bytes:         []byte("{\"amount\":2000000000000,\"code\":\"\",\"data\":\"\",\"gasLimit\":1,\"gasPrice\":1000000000,\"nonce\":187,\"senderAddr\":\"zil1n8uafq4thhzlq5nj50p55al9jvamr3s45hm49r\",\"toAddr\":\"zil1f9uqwhwkq7fnzgh5x4djyzg4a7j3apx8dsnnc0\",\"version\":21823489}"),
+		SignatureType: types.Schnorr1,
+	}
+
+	signer2, _ = keypair2.Signer()
+
+	testSignature, _ := signer2.Sign(payloadSchnorr1, types.Schnorr1)
+
+	goodSchnorr1Sig := mockSecpSignature(
+		types.Schnorr1,
+		signer2.PublicKey(),
+		[]byte("{\"amount\":2000000000000,\"code\":\"\",\"data\":\"\",\"gasLimit\":1,\"gasPrice\":1000000000,\"nonce\":187,\"senderAddr\":\"zil1n8uafq4thhzlq5nj50p55al9jvamr3s45hm49r\",\"toAddr\":\"zil1f9uqwhwkq7fnzgh5x4djyzg4a7j3apx8dsnnc0\",\"version\":21823489}"),
+		testSignature.Bytes)
+
+	assert.Equal(t, nil, signer2.Verify(goodSchnorr1Sig))
 }

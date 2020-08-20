@@ -22,6 +22,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	zilBech32 "github.com/Zilliqa/gozilliqa-sdk/bech32"
 	zilSchnorr "github.com/Zilliqa/gozilliqa-sdk/schnorr"
 	"github.com/Zilliqa/gozilliqa-sdk/transaction"
 	zilUtil "github.com/Zilliqa/gozilliqa-sdk/util"
@@ -85,13 +86,15 @@ func (s *SignerSecp256k1) Sign(
 
 		pubKeyBytes := s.KeyPair.PublicKey.Bytes
 
+		toAddr, _ := zilBech32.FromBech32Addr(unsignedTxnJson["toAddr"].(string))
+
 		zilliqaTransaction := &transaction.Transaction{
 			Version:      fmt.Sprintf("%.0f", unsignedTxnJson["version"]),
 			Nonce:        fmt.Sprintf("%.0f", unsignedTxnJson["nonce"]),
 			Amount:       fmt.Sprintf("%.0f", unsignedTxnJson["amount"]),
 			GasPrice:     fmt.Sprintf("%.0f", unsignedTxnJson["gasPrice"]),
 			GasLimit:     fmt.Sprintf("%.0f", unsignedTxnJson["gasLimit"]),
-			ToAddr:       unsignedTxnJson["toAddr"].(string),
+			ToAddr:       toAddr,
 			SenderPubKey: zilUtil.EncodeHex(pubKeyBytes),
 			Code:         unsignedTxnJson["code"].(string),
 			Data:         unsignedTxnJson["data"].(string),
@@ -147,13 +150,15 @@ func (s *SignerSecp256k1) Verify(signature *types.Signature) error {
 
 		fmt.Printf("signed txn json: %v\n\n", signedTxnJson)
 
+		toAddr, _ := zilBech32.FromBech32Addr(signedTxnJson["toAddr"].(string))
+
 		zilliqaTransaction := &transaction.Transaction{
 			Version:      fmt.Sprintf("%.0f", signedTxnJson["version"]),
 			Nonce:        fmt.Sprintf("%.0f", signedTxnJson["nonce"]),
 			Amount:       fmt.Sprintf("%.0f", signedTxnJson["amount"]),
 			GasPrice:     fmt.Sprintf("%.0f", signedTxnJson["gasPrice"]),
 			GasLimit:     fmt.Sprintf("%.0f", signedTxnJson["gasLimit"]),
-			ToAddr:       signedTxnJson["toAddr"].(string),
+			ToAddr:       toAddr,
 			SenderPubKey: zilUtil.EncodeHex(pubKey),
 			Code:         signedTxnJson["code"].(string),
 			Data:         signedTxnJson["data"].(string),
