@@ -15,6 +15,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -22,6 +23,8 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	zilSchnorr "github.com/Zilliqa/gozilliqa-sdk/schnorr"
+	"github.com/Zilliqa/gozilliqa-sdk/transaction"
+	zilUtil "github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
@@ -69,8 +72,33 @@ func (s *SignerSecp256k1) Sign(
 		}
 		sig = sig[:EcdsaSignatureLen]
 	case types.Schnorr1:
+		var unsignedTxnJson map[string]interface{}
+		err := json.Unmarshal([]byte(payload.Bytes), &unsignedTxnJson)
+
+		if err != nil {
+			return nil, fmt.Errorf("sign: unable to convert unsigned transaction json. %w", err)
+		}
+
 		pubKeyBytes := s.KeyPair.PublicKey.Bytes
-		sig, err = zilSchnorr.SignMessage(privKeyBytes, pubKeyBytes, payload.Bytes)
+
+		zilliqaTransaction := &transaction.Transaction{
+			Version:      fmt.Sprintf("%.0f", unsignedTxnJson["version"]),
+			Nonce:        fmt.Sprintf("%.0f", unsignedTxnJson["nonce"]),
+			Amount:       fmt.Sprintf("%.0f", unsignedTxnJson["amount"]),
+			GasPrice:     fmt.Sprintf("%.0f", unsignedTxnJson["gasPrice"]),
+			GasLimit:     fmt.Sprintf("%.0f", unsignedTxnJson["gasLimit"]),
+			ToAddr:       unsignedTxnJson["toAddr"].(string),
+			SenderPubKey: zilUtil.EncodeHex(pubKeyBytes),
+			Code:         unsignedTxnJson["code"].(string),
+			Data:         unsignedTxnJson["data"].(string),
+		}
+
+		zilliqaTransactionBytes, err := zilliqaTransaction.Bytes()
+		if err != nil {
+			return nil, fmt.Errorf("sign: unable to convert zilliqa transaction object to bytes %w", err)
+		}
+
+		sig, err = zilSchnorr.SignMessage(privKeyBytes, pubKeyBytes, zilliqaTransactionBytes)
 		if err != nil {
 			return nil, fmt.Errorf("sign: unable to sign. %w", err)
 		}
