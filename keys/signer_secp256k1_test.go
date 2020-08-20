@@ -15,6 +15,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -98,8 +99,17 @@ func TestVerifySecp256k1(t *testing.T) {
 		Bytes:         hash("hello"),
 		SignatureType: types.EcdsaRecovery,
 	}
+
+	payloadSchnorr1 := &types.SigningPayload{
+		Address:       "test",
+		Bytes:         []byte("{\"amount\":2000000000000,\"code\":\"\",\"data\":\"\",\"gasLimit\":1,\"gasPrice\":1000000000,\"nonce\":186,\"toAddr\":\"zil1f9uqwhwkq7fnzgh5x4djyzg4a7j3apx8dsnnc0\",\"version\":21823489}"),
+		SignatureType: types.Schnorr1,
+	}
 	testSignatureEcdsa, _ := signerSecp256k1.Sign(payloadEcdsa, types.Ecdsa)
 	testSignatureEcdsaRecovery, _ := signerSecp256k1.Sign(payloadEcdsaRecovery, types.EcdsaRecovery)
+	testSignatureSchnorr1, _ := signerSecp256k1.Sign(payloadSchnorr1, types.Schnorr1)
+
+	fmt.Printf("signature schnorr1 :%v\n", testSignatureSchnorr1)
 
 	var signatureTests = []signatureTest{
 		{mockSecpSignature(
@@ -129,6 +139,12 @@ func TestVerifySecp256k1(t *testing.T) {
 		signerSecp256k1.PublicKey(),
 		hash("hello"),
 		testSignatureEcdsaRecovery.Bytes)
+	goodSchnorr1Signature := mockSecpSignature(
+		types.Schnorr1,
+		signerSecp256k1.PublicKey(),
+		[]byte("{\"amount\":2000000000000,\"code\":\"\",\"data\":\"\",\"gasLimit\":1,\"gasPrice\":1000000000,\"nonce\":186,\"toAddr\":\"zil1f9uqwhwkq7fnzgh5x4djyzg4a7j3apx8dsnnc0\",\"version\":21823489}"),
+		testSignatureSchnorr1.Bytes)
+	assert.Equal(t, nil, signerSecp256k1.Verify(goodSchnorr1Signature))
 	assert.Equal(t, nil, signerSecp256k1.Verify(goodEcdsaSignature))
 	assert.Equal(t, nil, signerSecp256k1.Verify(goodEcdsaRecoverySignature))
 }

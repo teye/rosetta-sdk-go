@@ -72,8 +72,9 @@ func (s *SignerSecp256k1) Sign(
 		}
 		sig = sig[:EcdsaSignatureLen]
 	case types.Schnorr1:
+		fmt.Printf("payload is %v\n", payload.Bytes)
 		var unsignedTxnJson map[string]interface{}
-		err := json.Unmarshal([]byte(payload.Bytes), &unsignedTxnJson)
+		err := json.Unmarshal(payload.Bytes, &unsignedTxnJson)
 
 		if err != nil {
 			return nil, fmt.Errorf("sign: unable to convert unsigned transaction json. %w", err)
@@ -134,7 +135,31 @@ func (s *SignerSecp256k1) Verify(signature *types.Signature) error {
 		normalizedSig := sig[:EcdsaSignatureLen]
 		verify = secp256k1.VerifySignature(pubKey, message, normalizedSig)
 	case types.Schnorr1:
-		verify = zilSchnorr.VerifySignature(pubKey, message, sig)
+		var signedTxnJson map[string]interface{}
+		err := json.Unmarshal(message, &signedTxnJson)
+
+		if err != nil {
+			return fmt.Errorf("sign: unable to convert signed transaction json. %w", err)
+		}
+
+		zilliqaTransaction := &transaction.Transaction{
+			Version:      fmt.Sprintf("%.0f", signedTxnJson["version"]),
+			Nonce:        fmt.Sprintf("%.0f", signedTxnJson["nonce"]),
+			Amount:       fmt.Sprintf("%.0f", signedTxnJson["amount"]),
+			GasPrice:     fmt.Sprintf("%.0f", signedTxnJson["gasPrice"]),
+			GasLimit:     fmt.Sprintf("%.0f", signedTxnJson["gasLimit"]),
+			ToAddr:       signedTxnJson["toAddr"].(string),
+			SenderPubKey: zilUtil.EncodeHex(pubKey),
+			Code:         signedTxnJson["code"].(string),
+			Data:         signedTxnJson["data"].(string),
+		}
+
+		zilliqaTransactionBytes, err := zilliqaTransaction.Bytes()
+		if err != nil {
+			return fmt.Errorf("sign: unable to convert zilliqa transaction object to bytes %w", err)
+		}
+
+		verify = zilSchnorr.VerifySignature(pubKey, zilliqaTransactionBytes, sig)
 	default:
 		return fmt.Errorf("%s is not supported", signature.SignatureType)
 	}
