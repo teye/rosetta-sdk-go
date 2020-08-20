@@ -72,13 +72,16 @@ func (s *SignerSecp256k1) Sign(
 		}
 		sig = sig[:EcdsaSignatureLen]
 	case types.Schnorr1:
-		fmt.Printf("payload is %v\n", payload.Bytes)
+		fmt.Printf("payload is %v\n\n", payload.Bytes)
 		var unsignedTxnJson map[string]interface{}
 		err := json.Unmarshal(payload.Bytes, &unsignedTxnJson)
 
 		if err != nil {
 			return nil, fmt.Errorf("sign: unable to convert unsigned transaction json. %w", err)
 		}
+
+		fmt.Printf("private key: %v\n\n", zilUtil.EncodeHex(privKeyBytes))
+		fmt.Printf("unsigned txn json: %v\n\n", unsignedTxnJson)
 
 		pubKeyBytes := s.KeyPair.PublicKey.Bytes
 
@@ -142,6 +145,8 @@ func (s *SignerSecp256k1) Verify(signature *types.Signature) error {
 			return fmt.Errorf("sign: unable to convert signed transaction json. %w", err)
 		}
 
+		fmt.Printf("signed txn json: %v\n\n", signedTxnJson)
+
 		zilliqaTransaction := &transaction.Transaction{
 			Version:      fmt.Sprintf("%.0f", signedTxnJson["version"]),
 			Nonce:        fmt.Sprintf("%.0f", signedTxnJson["nonce"]),
@@ -160,6 +165,8 @@ func (s *SignerSecp256k1) Verify(signature *types.Signature) error {
 		}
 
 		verify = zilSchnorr.VerifySignature(pubKey, zilliqaTransactionBytes, sig)
+
+		fmt.Printf("result of verify: %v\n\n", verify)
 	default:
 		return fmt.Errorf("%s is not supported", signature.SignatureType)
 	}
